@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Environment variables & API keys
+.env
+.env.local
+
+# Cache and temporary files
+.cache/
+data/cache/
+*.log
+.pytest_cache/
+traces/
+
+# OS specific
+.DS_Store
+Thumbs.db

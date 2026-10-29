@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production AI Research Agent | Interactive Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+    <!-- Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+                    AI
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold tracking-tight text-white">Research Agent</h1>
+                    <p class="text-xs text-slate-400">Production-Grade Agentic Orchestrator</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 text-xs text-slate-400">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                    ● Engine Online
+                </span>
+                <span class="hidden sm:inline">DuckDuckGo • ArXiv • Resilient Scraper</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+        <!-- Hero / Query Input -->
+        <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <form id="researchForm" class="space-y-4">
+                <label for="queryInput" class="block text-sm font-medium text-slate-300">
+                    Ask a Research Question
+                </label>
+                <div class="relative">
+                    <textarea id="queryInput" rows="3" required
+                        placeholder="e.g. Compare the top 3 open-source vector databases for a startup building RAG products..."
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition"></textarea>
+                </div>
+
+                <!-- Controls & Examples -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="flex items-center space-x-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="mockModeToggle" class="sr-only peer">
+                            <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <span class="ms-2 text-xs font-medium text-slate-400">Mock Mode (Zero-cost / Offline)</span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button type="submit" id="submitBtn"
+                            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium rounded-xl text-sm transition flex items-center space-x-2 shadow-lg shadow-indigo-600/30">
+                            <span id="btnText">Start Research</span>
+                            <div id="btnSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Example Pills -->
+                <div class="pt-3 border-t border-slate-800">
+                    <span class="text-xs text-slate-400 block mb-2 font-medium">Sample Queries:</span>
+                    <div class="flex flex-wrap gap-2">
+                        {% for ex in example_queries %}
+                        <button type="button" class="example-btn text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition"
+                            data-query="{{ ex }}">
+                            {{ ex }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Live Progress Indicator -->
+        <section id="progressSection" class="hidden bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-xl animate-pulse">
+            <div class="flex items-center space-x-3 text-indigo-400 mb-3">
+                <div class="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <h3 class="text-sm font-semibold tracking-wide uppercase">Agent Execution Pipeline Active</h3>
+            </div>
+            <div id="liveStepText" class="text-sm text-slate-300 font-mono">
+                Deconstructing query and synthesizing plan...
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="hidden space-y-6">
+
+            <!-- Executive Summary & Verdict Header -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Summary Card -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Executive Summary</span>
+                        <div class="flex items-center space-x-2">
+                            <span id="confBadge" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                High Confidence
+                            </span>
+                        </div>
+                    </div>
+                    <p id="shortAnswerText" class="text-slate-200 text-base leading-relaxed font-normal"></p>
+                    <p id="confRationaleText" class="text-xs text-slate-400 italic"></p>
+                </div>
+
+                <!-- Grounding Judge & Metrics -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block border-b border-slate-800 pb-3">
+                        Factual Grounding Audit
+                    </span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-400">Grounding Score</span>
+                        <span id="groundingScoreText" class="text-xl font-bold text-emerald-400">100%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2">
+                        <div id="groundingProgressBar" class="bg-emerald-500 h-2 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <p id="groundingNotesText" class="text-xs text-slate-400 leading-relaxed"></p>
+
+                    <div class="pt-3 border-t border-slate-800 text-xs text-slate-400 space-y-1">
+                        <div class="flex justify-between">
+                            <span>Execution Latency:</span>
+                            <span id="metricLatency" class="text-slate-200 font-mono">0.0s</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tools Dispatched:</span>
+                            <span id="metricTools" class="text-slate-200 font-mono">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Cache Hits:</span>
+                            <span id="metricCache" class="text-slate-200 font-mono">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Plan Cards -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <span class="text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center space-x-2">
+                    <span>📋 Orchestration Plan</span>
+                </span>
+                <div id="planStepsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Steps injected via JS -->
+                </div>
+            </div>
+
+            <!-- Key Findings & Sources -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Key Findings -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400 flex items-center space-x-2">
+                        <span>🎯 Key Findings (Source-Grounded)</span>
+                    </span>
+                    <ul id="keyFindingsList" class="space-y-3 text-sm text-slate-200 leading-relaxed">
+                        <!-- Injected via JS -->
+                    </ul>
+                </div>
+
+                <!-- Sources Used -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400 flex items-center space-x-2">
+                        <span>📚 Sources Referenced</span>
+                    </span>
+                    <div id="sourcesList" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assumptions & Next Steps -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-yellow-400">
+                        ⚠️ Limitations & Assumptions
+                    </span>
+                    <ul id="limitationsList" class="space-y-2 text-xs text-slate-300"></ul>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">
+                        🚀 Suggested Next Steps
+                    </span>
+                    <ul id="nextStepsList" class="space-y-2 text-xs text-slate-300"></ul>
+                </div>
+            </div>
+
+            <!-- Export / Raw JSON -->
+            <div class="flex justify-end space-x-3 pt-2">
+                <button id="copyJsonBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-300 rounded-lg border border-slate-700 transition">
+                    Copy Raw Report JSON
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
+        Production-Oriented AI Research Agent • Designed for Reliability, Grounding, and Observability
+    </footer>
+
+    <!-- Frontend JS -->
+    <script>
+        let currentReportPayload = null;
+
+        // Example button click
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('queryInput').value = btn.getAttribute('data-query');
+            });
+        });
+
+        // Form submission
+        document.getElementById('researchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('queryInput').value.trim();
+            const mockMode = document.getElementById('mockModeToggle').checked;
+
+            if (!query) return;
+
+            // UI updates
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('btnText').textContent = 'Researching...';
+            document.getElementById('btnSpinner').classList.remove('hidden');
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, mock_mode: mockMode })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Server error occurred');
+                }
+
+                const data = await response.json();
+                currentReportPayload = data;
+                renderResults(data);
+
+            } catch (err) {
+                alert('Research query failed: ' + err.message);
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('btnText').textContent = 'Start Research';
+                document.getElementById('btnSpinner').classList.add('hidden');
+                document.getElementById('progressSection').classList.add('hidden');
+            }
+        });
+
+        function renderResults(data) {
+            const report = data.report;
+            const plan = data.plan;
+            const judge = data.judge;
+            const metrics = report.metadata || {};
+
+            // Executive Summary
+            document.getElementById('shortAnswerText').textContent = report.short_answer;
+            document.getElementById('confRationaleText').textContent = 'Rationale: ' + report.confidence_rationale;
+
+            const badge = document.getElementById('confBadge');
+            badge.textContent = report.confidence_level + ' Confidence';
+            if (report.confidence_level === 'High') {
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            } else if (report.confidence_level === 'Medium') {
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20';
+            } else {
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20';
+            }
+
+            // Grounding Judge
+            const gScore = Math.round(judge.grounding_score * 100);
+            document.getElementById('groundingScoreText').textContent = gScore + '%';
+            document.getElementById('groundingProgressBar').style.width = gScore + '%';
+            document.getElementById('groundingNotesText').textContent = judge.audit_notes;
+
+            // Metrics
+            document.getElementById('metricLatency').textContent = (metrics.latency_seconds || 0) + 's';
+            document.getElementById('metricTools').textContent = metrics.tool_calls_count || 0;
+            document.getElementById('metricCache').textContent = metrics.cache_hits_count || 0;
+
+            // Plan Steps
+            const stepsContainer = document.getElementById('planStepsContainer');
+            stepsContainer.innerHTML = '';
+            (plan.steps || []).forEach(step => {
+                const stepCard = document.createElement('div');
+                stepCard.className = 'bg-slate-950/70 border border-slate-800 rounded-xl p-4 text-xs space-y-2';
+                stepCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-amber-400">Step ${step.step_id}</span>
+                        <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">${step.tool}</span>
+                    </div>
+                    <p class="text-slate-200 font-medium">${step.objective}</p>
+                    <p class="text-slate-400 text-[11px] font-mono truncate">🎯 ${step.query_or_target}</p>
+                    <p class="text-slate-500 text-[11px] italic">${step.rationale}</p>
+                `;
+                stepsContainer.appendChild(stepCard);
+            });
+
+            // Key Findings
+            const findingsList = document.getElementById('keyFindingsList');
+            findingsList.innerHTML = '';
+            (report.key_findings || []).forEach(kf => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start space-x-2';
+                li.innerHTML = `
+                    <span class="text-emerald-400 mt-1 font-bold">✓</span>
+                    <span>${kf}</span>
+                `;
+                findingsList.appendChild(li);
+            });
+
+            // Sources
+            const sourcesList = document.getElementById('sourcesList');
+            sourcesList.innerHTML = '';
+            (report.sources_used || []).forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950/70 border border-slate-800 rounded-xl p-3 text-xs space-y-1';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <a href="${s.url}" target="_blank" class="font-semibold text-indigo-400 hover:underline truncate max-w-[80%]">
+                            [${s.source_id}] ${s.title}
+                        </a>
+                        <span class="text-[10px] text-slate-500 uppercase">${s.domain || 'web'}</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] leading-relaxed line-clamp-2">${s.snippet}</p>
+                `;
+                sourcesList.appendChild(item);
+            });
+
+            // Limitations
+            const limList = document.getElementById('limitationsList');
+            limList.innerHTML = '';
+            (report.limitations_or_assumptions || []).forEach(lim => {
+                const li = document.createElement('li');
+                li.textContent = '• ' + lim;
+                limList.appendChild(li);
+            });
+
+            // Next steps
+            const nextList = document.getElementById('nextStepsList');
+            nextList.innerHTML = '';
+            (report.suggested_next_steps || []).forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = '• ' + step;
+                nextList.appendChild(li);
+            });
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        // Copy raw JSON
+        document.getElementById('copyJsonBtn').addEventListener('click', () => {
+            if (!currentReportPayload) return;
+            navigator.clipboard.writeText(JSON.stringify(currentReportPayload.report, null, 2));
+            alert('Research Report JSON copied to clipboard!');
+        });
+    </script>
+</body>
+</html>
